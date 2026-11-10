@@ -1,0 +1,359 @@
+.TH AMP 1 "November 2026" "animated-man-page" "User Commands"
+.SH NAME
+amp \- animated man page pager
+.SH SYNOPSIS
+.B amp
+.RB [ \-h | \-\-help ]
+.RB [ \-V | \-\-version ]
+.RB [ \-\-install\-hint ]
+.RB [ \-\-cleanup\-hint ]
+.RI [ file ]
+.P
+.B man \-P
+.I /path/to/amp/amp
+.I topic
+.SH DESCRIPTION
+.B amp
+(short for
+.IR "animated man page" )
+is a terminal pager similar in spirit to
+.BR less (1).
+It displays formatted manual-page text and can overlay live animations
+inside rectangular regions marked in the document.
+.P
+It is intended to be used as
+.B MANPAGER
+(or via
+.BR man (1)'s
+.B \-P
+option) so that selected pages can show a typescript or caca-style
+animation while the surrounding documentation remains readable.
+.P
+This content best viewed with
+.BR amp .
+.SS Animation box (preferred)
+An animation region is a
+.I box
+delimited by markers.  Between the markers you put
+.B static
+lines that ordinary pagers (
+.BR less ,
+.BR more )
+will show unchanged.  When the page is viewed with
+.BR amp ,
+those lines are overwritten by the live animation.
+.P
+Up to five boxes are supported.
+.P
+Format:
+.EX
+<<<ANIM_BOX w=\fIW\fR h=\fIH\fR id=\fIL\fR timing=\fIfile\fR typescript=\fIfile\fR>>>
+    static line 1 (visible in less / more)
+    static line 2
+    \.\.\.
+<<<END_ANIM_BOX>>>
+.EE
+.P
+Attributes (space-separated
+.BR key = value
+pairs; values may be quoted):
+.TP
+.B w=\fIN\fR
+Box width in columns (recommended).
+.TP
+.B h=\fIN\fR
+Box height in rows (recommended).  amp reads up to
+.I N
+lines of static body (or until
+.BR END_ANIM_BOX ).
+.TP
+.B id=\fIL\fR
+Single letter A–Z identifying this region (default: first free letter).
+Used when resolving
+.B ANIM_L_*
+environment variables if paths are not given on the marker.
+.TP
+.B timing=\fIpath\fR
+.BR script (1)
+timing file for this box.  Absolute path, path relative to the current
+directory, or a basename looked up under the data directories listed in
+.BR FILES .
+.TP
+.B typescript=\fIpath\fR
+Corresponding typescript file (same path rules as
+.BR timing ).
+.TP
+.B divisor=\fIN\fR
+Speed multiplier for
+.BR scriptreplay (1)
+(default 1.0).
+.TP
+.B loop=\fI0\fR|\fI1\fR
+Whether the animation loops (default 1).
+.P
+Marker lines are removed from the display under amp.  The static body is
+blanked and replaced by the animation so no residue remains.
+.P
+Example with two boxes (paths relative to a data directory – see
+.BR FILES ):
+.EX
+This content best viewed with amp.
+
+<<<ANIM_BOX w=40 h=8 id=A timing=demo.timing typescript=demo.typescript>>>
+    [ Animation A – demo session ]
+    [ Shown here when not using amp ]
+<<<END_ANIM_BOX>>>
+
+<<<ANIM_BOX w=24 h=6 id=B timing=b.timing typescript=b.typescript>>>
+    [ Animation B placeholder ]
+<<<END_ANIM_BOX>>>
+.EE
+.SS Legacy letter filler
+Solid runs of at least eight identical uppercase letters (and at least two
+rows) still mark a region and map to
+.B ANIM_L_TIMING
+/
+.B ANIM_L_TYPESCRIPT
+when no marker paths are present.  Prefer the explicit
+.B ANIM_BOX
+form for new pages.
+.SS Animation source resolution
+For each box, timing and typescript paths are taken from, in order:
+.IP 1. 3
+.B timing=
+and
+.B typescript=
+attributes on the
+.B ANIM_BOX
+line (preferred – no environment variables required);
+.IP 2. 3
+environment
+.B ANIM_L_TIMING
+and
+.B ANIM_L_TYPESCRIPT
+(where
+.I L
+is the box
+.BR id );
+.IP 3. 3
+legacy
+.B ANIM_TIMING
+/
+.B ANIM_TYPESCRIPT
+for id
+.B Q
+only.
+.P
+When the marker supplies both paths, only
+.B MANPAGER
+needs to be set; the
+.B ANIM_*
+variables are optional.
+.P
+Path values may be quoted (single or double quotes) or unquoted.
+Absolute paths and paths containing
+.B ~
+are accepted.
+Relative names are resolved in this order:
+.IP 1. 3
+as given (current working directory);
+.IP 2. 3
+.I $AMP_DATA_DIR/
+and
+.I $AMP_DATA_DIR/animations/ ;
+.IP 3. 3
+.I $XDG_DATA_HOME/amp/
+and
+.I $XDG_DATA_HOME/amp/animations/ ;
+.IP 4. 3
+.I ~/.local/share/amp/
+and
+.I ~/.local/share/amp/animations/ ;
+.IP 5. 3
+.I /usr/share/amp/
+and
+.I /usr/share/amp/animations/ .
+.P
+Animations
+.B loop by default.
+If no usable files are found, a coloured spinner is shown in the box
+instead.  Prepare typescripts with
+.BR amp\-trim (1)
+so clear-screen sequences are removed and the content fits the box.
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Print a terse usage summary and install/uninstall pointers, then exit.
+.TP
+.BR \-V ", " \-\-version
+Print the version number and exit.
+.TP
+.B \-\-install\-hint
+Print short install/uninstall summary.
+.TP
+.B \-\-cleanup\-hint
+Point at
+.BR uninstall.sh .
+.TP
+.I file
+Optional path to a pre-formatted text file.  When omitted,
+.B amp
+reads standard input (the normal case when invoked by
+.BR man (1)).
+.SH ENVIRONMENT
+.TP
+.B MANPAGER
+Set to the
+.B amp
+wrapper script so
+.BR man (1)
+uses amp as its pager.
+.TP
+.B AMP_DATA_DIR
+Preferred directory for animation timing/typescript files.  Checked first
+when resolving relative paths from
+.B ANIM_BOX
+attributes.
+.TP
+.B XDG_DATA_HOME
+If set,
+.I $XDG_DATA_HOME/amp
+is searched after
+.BR AMP_DATA_DIR .
+.TP
+.B ANIM_L_TIMING / ANIM_L_TYPESCRIPT
+Fallback paths for box id
+.I L
+when the marker does not supply them.
+.TP
+.B ANIM_L_DIVISOR / ANIM_L_LOOP
+Optional speed and loop controls for id
+.IR L .
+.TP
+.B ANIM_TIMING / ANIM_TYPESCRIPT / ANIM_DIVISOR
+Legacy aliases for id
+.B Q
+only.
+.SH FILES
+Animation files are resolved in this order for relative names:
+.TP
+.I $AMP_DATA_DIR/
+.TQ
+.I $AMP_DATA_DIR/animations/
+Explicit override (highest priority after absolute paths and
+.IR ./ ).
+.TP
+.I $XDG_DATA_HOME/amp/
+.TQ
+.I $XDG_DATA_HOME/amp/animations/
+Per-user data (default
+.I XDG_DATA_HOME
+is
+.IR ~/.local/share ).
+.TP
+.I ~/.local/share/amp/
+.TQ
+.I ~/.local/share/amp/animations/
+Default user location when
+.B XDG_DATA_HOME
+is unset.
+.TP
+.I /usr/share/amp/
+.TQ
+.I /usr/share/amp/animations/
+System-wide location for packaged animations.
+.P
+Recommended layout for a small collection:
+.EX
+~/.local/share/amp/animations/
+    demo.timing
+    demo.typescript
+    b.timing
+    b.typescript
+.EE
+.P
+Then a man page can use short names:
+.EX
+<<<ANIM_BOX w=40 h=8 id=A timing=demo.timing typescript=demo.typescript>>>
+.EE
+.SH KEYS
+.TS
+lb l.
+q	Quit
+space / PgDn	Page forward
+b / PgUp	Page backward
+j / ↓	Line forward
+k / ↑	Line backward
+g / Home	Go to top
+G / End	Go to bottom
+/	Start search
+n / N	Next / previous match
+h / ?	Help screen (animation paused)
+.TE
+.SH INSTALLATION
+The recommended wrapper is the
+.B amp
+script next to
+.B amp.py
+(avoids quoting issues with
+.BR man (1)).
+.P
+One-shot:
+.EX
+man -P /path/to/amp/amp ls
+.EE
+.P
+Session-only:
+.EX
+export MANPAGER=/path/to/amp/amp
+man ls
+.EE
+.P
+Permanent (bash/zsh):
+.EX
+echo 'export MANPAGER=/path/to/amp/amp' >> ~/.bashrc
+source ~/.bashrc
+.EE
+.P
+Helper scripts:
+.EX
+./install.sh              # show the export line
+./install.sh --permanent  # append to the shell rc file
+./uninstall.sh            # reverse the above
+.EE
+.P
+A controlling terminal (/dev/tty) is required.
+.SH CLEANUP
+.EX
+unset MANPAGER
+unset ANIM_A_TIMING ANIM_A_TYPESCRIPT ANIM_A_DIVISOR ANIM_A_LOOP
+./uninstall.sh
+.EE
+.SH EXIT STATUS
+.TP
+.B 0
+Normal exit.
+.TP
+.B 1
+Empty input when content was expected.
+.TP
+.B 2
+Usage error, missing file, or no controlling terminal.
+.SH EXAMPLES
+.EX
+# view a local page with paths on the ANIM_BOX line
+python3 amp.py sample_man.txt
+
+# or resolve short names from the user data dir
+mkdir -p ~/.local/share/amp/animations
+cp demo.timing demo.typescript ~/.local/share/amp/animations/
+man -P ./amp some-animated-page
+.EE
+.SH SEE ALSO
+.BR amp\-trim (1),
+.BR man (1),
+.BR less (1),
+.BR script (1),
+.BR scriptreplay (1)
+.SH AUTHOR
+Animated man-page demo

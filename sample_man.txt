@@ -1,0 +1,68 @@
+SAMPLE(1)                        User Commands                       SAMPLE(1)
+
+NAME
+       sample - demonstration page for amp
+
+SYNOPSIS
+       sample [options]
+
+DESCRIPTION
+       This is a short demonstration man-page-like document.  It contains a
+       marked rectangular region that the custom pager will replace with a
+       live animation driven by scriptreplay (or a built-in spinner if the
+       animation files are not supplied).
+
+       The region below is an animation box.  Indentation is respected.
+       Paths may be absolute, quoted, or relative (see amp(1) for the
+       search order).  No ANIM_* environment variables are required when
+       the paths are given on the marker.
+
+           <<<ANIM_BOX w=40 h=8 id=A timing=demo.timing typescript=demo.typescript>>>
+           [ Animation placeholder – visible in less ]
+           [ Replace this text with a short description ]
+           [ of the tool session shown by the animation. ]
+           [ amp overwrites this whole rectangle. ]
+           [ line 5 ]
+           [ line 6 ]
+           [ line 7 ]
+           [ line 8 ]
+           <<<END_ANIM_BOX>>>
+
+       Absolute / quoted form (also works with only MANPAGER set):
+
+           <<<ANIM_BOX w=24 h=6 id=B timing="/usr/share/amp/b.timing" typescript="/usr/share/amp/b.typescript">>>
+           [ Animation B – absolute paths ]
+           <<<END_ANIM_BOX>>>
+
+OPTIONS
+       -h, --help
+              Show a help message and exit.
+
+       -v, --verbose
+              Be more verbose.  This line is intentionally long so that the
+              new message-wrapping code can be observed on a narrow terminal:
+              the entire sentence should remain readable instead of being
+              truncated at the right edge of the screen.
+
+EXAMPLES
+       A typical invocation of the tool that this page documents might look
+       like:
+
+              $ sample --verbose /some/path
+
+       The animation above is intended to show a live typescript of such a
+       session.  Use amp-trim to prepare the typescript for the exact box
+       dimensions before feeding it to the pager.
+
+       For a colourful caca-style block animation, put the paths
+       on the marker (no ANIM_* variables needed):
+
+              <<<ANIM_BOX w=14 h=9 id=C timing=caca_demo.timing typescript=caca_demo.typescript>>>
+              ...
+              <<<END_ANIM_BOX>>>
+
+SEE ALSO
+       man(1), less(1), script(1), scriptreplay(1), amp-trim
+
+AUTHOR
+       Animated pager demo

@@ -1,0 +1,9 @@
+$ sample --verbose /tmp/demo
+Starting sample tool...
+Loading configuration...
+Processing files:
+  - file1.txt
+  - file2.txt
+  - file3.txt
+Done. 3 files processed successfully.
+$ 

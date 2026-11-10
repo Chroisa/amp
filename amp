@@ -1,0 +1,8 @@
+#!/bin/sh
+# amp – animated man page (wrapper for MANPAGER / man -P)
+# Usage:
+#   export MANPAGER="/full/path/to/amp/amp"
+#   man ls
+# or:
+#   man -P "/full/path/to/amp/amp" ls
+exec python3 "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")/amp.py" "$@"
